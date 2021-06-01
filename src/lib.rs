@@ -1,5 +1,5 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::{LookupMap, UnorderedMap, UnorderedSet};
+use near_sdk::collections::{LookupMap, UnorderedSet};
 use near_sdk::json_types::{Base64VecU8, ValidAccountId, U64};
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{env, log, near_bindgen, AccountId, CryptoHash};
@@ -12,8 +12,6 @@ pub struct NftContract {
     pub tokens_per_owner: LookupMap<AccountId, UnorderedSet<TokenId>>,
 
     pub tokens_by_id: LookupMap<TokenId, Token>,
-
-    pub token_metadata_by_id: UnorderedMap<TokenId, TokenMetadata>,
 
     pub metadata: NFTMetadata,
 }
@@ -57,24 +55,11 @@ pub struct TokenMetadata {
     pub reference_hash: Option<Base64VecU8>, // Base64-encoded sha256 hash of JSON from reference field. Required if `reference` is included.
 }
 
-/// Helper structure to for keys of the persistent collections.
-#[derive(BorshSerialize)]
-pub enum StorageKey {
-    TokensPerOwner,
-    TokenPerOwnerInner { account_id_hash: CryptoHash },
-    TokensById,
-    TokenMetadataById,
-    NftMetadata,
-}
-
 impl Default for NftContract {
     fn default() -> Self {
         Self {
             tokens_per_owner: LookupMap::new(StorageKey::TokensPerOwner.try_to_vec().unwrap()),
             tokens_by_id: LookupMap::new(StorageKey::TokensById.try_to_vec().unwrap()),
-            token_metadata_by_id: UnorderedMap::new(
-                StorageKey::TokenMetadataById.try_to_vec().unwrap(),
-            ),
             metadata: NFTMetadata {
                 spec: "".to_string(),
                 name: "Nft demo".to_string(),
@@ -90,6 +75,10 @@ impl Default for NftContract {
 
 #[near_bindgen]
 impl NftContract {
+    pub fn nft_metadata(&self) -> NFTMetadata {
+        self.metadata.clone()
+    }
+
     pub fn nft_mint(&mut self, token_id: TokenId, metadata: TokenMetadata) {
         let token = Token {
             token_id,
@@ -177,23 +166,6 @@ impl NftContract {
     }
 }
 
-pub fn hash_account_id(account_id: &AccountId) -> CryptoHash {
-    let mut hash = CryptoHash::default();
-    hash.copy_from_slice(&env::sha256(account_id.as_bytes()));
-    hash
-}
-
-pub trait NonFungibleTokenMetadata {
-    fn nft_metadata(&self) -> NFTMetadata;
-}
-
-#[near_bindgen]
-impl NonFungibleTokenMetadata for NftContract {
-    fn nft_metadata(&self) -> NFTMetadata {
-        self.metadata.clone()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -270,4 +242,17 @@ mod tests {
         contract.nft_transfer(ValidAccountId::try_from(bob()).unwrap(), "0".to_string());
         assert_eq!(contract.nft_token("0".to_string()).unwrap().owner_id, bob());
     }
+}
+
+fn hash_account_id(account_id: &AccountId) -> CryptoHash {
+    let mut hash = CryptoHash::default();
+    hash.copy_from_slice(&env::sha256(account_id.as_bytes()));
+    hash
+}
+
+#[derive(BorshSerialize)]
+enum StorageKey {
+    TokensPerOwner,
+    TokenPerOwnerInner { account_id_hash: CryptoHash },
+    TokensById,
 }
