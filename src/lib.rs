@@ -9,11 +9,11 @@ near_sdk::setup_alloc!();
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct NftContract {
-    pub tokens_per_owner: LookupMap<AccountId, UnorderedSet<TokenId>>,
+    pub metadata: NFTMetadata,
 
     pub tokens_by_id: LookupMap<TokenId, Token>,
 
-    pub metadata: NFTMetadata,
+    pub tokens_per_owner: LookupMap<AccountId, UnorderedSet<TokenId>>,
 }
 
 pub type TokenId = String;
