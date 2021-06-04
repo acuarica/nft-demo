@@ -61,9 +61,9 @@ impl Default for NftContract {
             tokens_per_owner: LookupMap::new(StorageKey::TokensPerOwner.try_to_vec().unwrap()),
             tokens_by_id: LookupMap::new(StorageKey::TokensById.try_to_vec().unwrap()),
             metadata: NFTMetadata {
-                spec: "".to_string(),
-                name: "Nft demo".to_string(),
-                symbol: "DEMO".to_string(),
+                spec: "z-nft-1.0.0".to_string(),
+                name: "Blockchain Z-days Demo".to_string(),
+                symbol: "ZNFT".to_string(),
                 icon: None,
                 base_uri: None,
                 reference: None,
